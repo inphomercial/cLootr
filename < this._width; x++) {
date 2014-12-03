@@ -19,28 +19,6 @@ Game.Builder = function(width, height, depth) {
             }
         }
     }
-
-    for(var z=0; z<this._width; z++) {
-        this.setupRegons(z);
-    }
-
-    this._connectAllRegions();
-}
-
-Game.Builder.prototype.getTiles = function() {
-    return this._tiles;
-}
-
-Game.Builder.prototype.getDepth = function() {
-    return this._depth;
-}
-
-Game.Builder.prototype.getWidth = function() {
-    return this._width;
-}
-
-Game.Builder.prototype.getHeight = funciton() {
-    return this._height;
 }
 
 // Fetches a list of all points that overlap between one region and another on the floor below it
@@ -71,26 +49,10 @@ Game.Builder.prototype._findRegionOverlaps = function(z, r1, r2) {
 Game.Builder.prototype._connectAllRegions = function() {
     for(var z=0; z<this.depth -1; z++) {
         // iterate through each tile, if we havent tried to connect the region
-        // of that tile  n both depth levels then we try .  store connected
+        // of that tile on both depth levels then we try .  store connected
         // properties as string for ease of look up
         var key, connected = {};
-        for (var x = 0; x < this._width; x++) {
-            for (var y = 0; y < this._height; y++) {
-                key = this._regions[z][x][y] + ',' +
-                      this._regions[z+1][x][y];
-                if (this._tiles[z][x][y] == Game.Tile.floorTile &&
-                    this._tiles[z+1][x][y] == Game.Tile.floorTile &&
-                    !connected[key]) {
-                    // Since both tiles are floors and we haven't 
-                    // already connected the two regions, try now.
-                    this._connectRegions(z, this._regions[z][x][y],
-                        this._regions[z+1][x][y]);
-                    connected[key] = true;
-                }
-            }
-        }
-    }
-}
+
 
 // Actuall tries to connect two regions by calculating where they overlap and adding stairs
 Game.Builder.prototype._connectRegions = function(z, r1, r2) {

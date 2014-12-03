@@ -5,8 +5,9 @@ Game.Map = function(tiles, player) {
 	// cache the width and heigth
 	// based on length of dimensions
 	// of tiles array
-	this._width = tiles.length;
-	this._height = tiles[0].length;
+	this._width = tiles[0].length;
+	this._height = tiles[0][0].length;
+    this._depth = tiles.length;
 
 	// Create a list which will hold all entities
 	this._entities = [];
@@ -108,6 +109,10 @@ Game.Map.prototype.getTile = function(x, y) {
 		return this._tiles[x][y] || Game.Tiles.nullTile;
 	}
 };
+
+Game.Map.prototype.getDepth = function() {
+    return this._depth;
+}
 
 Game.Map.prototype.dig = function(x, y) {
 	// if the tile is diggable, update it to a floor tile

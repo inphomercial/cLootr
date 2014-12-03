@@ -9,6 +9,7 @@ Game.Entity = function(args) {
 	this._name = args.name || "";
 	this._x = args.x || 0;
 	this._y = args.y || 0;
+	this._z = args.z || 0;
 	this._map = null;
 
 	// Create an object which will keep track of mixins
@@ -59,12 +60,26 @@ Game.Entity.prototype.setName = function(name) {
 	this._name = name;
 }
 
+Game.Entity.prototype.setPosition = function(x, y, z) {
+    this._x = x;
+    this._y = y;
+    this._z = z;
+}
+
 Game.Entity.prototype.setX = function(x) {
 	this._x	= x;
 }
 
 Game.Entity.prototype.setY = function(y) {
 	this._y	= y;
+}
+
+Game.Entity.prototype.setZ = function(z) {
+    this._z = z;
+}
+
+Game.Entity.prototype.getZ = function() {
+    return this._z;
 }
 
 Game.Entity.prototype.getName = function() {

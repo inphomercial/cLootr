@@ -42,7 +42,7 @@ Game.Mixins.PlayerActor = {
 	groupName: 'Actor',
 	act: function() {
 		// re-render the screen
-		Game.refresh();
+        Game.refresh();
 		// Lock the engine and wait async for player to press a key
 		this.getMap().getEngine().lock();
 		// Clear the message queue

@@ -63,7 +63,7 @@ Game.Screen.playScreen = {
 		for (var i=0; i<iterations; i++) {
 			generator.create();
 		}
-		
+
 		// Update our map
 		generator.create(function(x, y, v) {
 			if( v === 1) {
@@ -88,7 +88,7 @@ Game.Screen.playScreen = {
 		console.log("Exited the play screen");
 	},
 	render: function(display) {
-		
+
 		var screenWidth = Game.getScreenWidth();
         var screenHeight = Game.getScreenHeight();
         // Make sure the x-axis doesn't go to the left of the left bound
