@@ -18,15 +18,17 @@ Game.Map = function(tiles, player) {
 	// Add the player
 	this.addEntityAtRandomPosition(player);
 	// Add random fungi
-	for(var i=0; i<500; i++) {
-		this.addEntityAtRandomPosition(new Game.Entity(Game.FungusTemplate));
+	for(var z=0; z<this._depth; z++) {
+		for(var i=0; i<500; i++) {
+			this.addEntityAtRandomPosition(new Game.Entity(Game.FungusTemplate), z);
+		}	
 	}
 };
 
-Game.Map.prototype.isEmptyFloor = function(x, y) {
+Game.Map.prototype.isEmptyFloor = function(x, y, z) {
 	// check if the tile is a flor & if there is no entity
-	return this.getTile(x, y) == Game.Tile.floorTile &&
-		   !this.getEntityAt(x, y);
+	return this.getTile(x, y, z) == Game.Tile.floorTile &&
+		   !this.getEntityAt(x, y, z);
 }
 
 Game.Map.prototype.removeEntity = function(entity) {
@@ -47,7 +49,8 @@ Game.Map.prototype.removeEntity = function(entity) {
 Game.Map.prototype.addEntity = function(entity) {
 	// Make sure the entities position is within bounds
 	if (entity.getX() < 0 || entity.getX() > this._width ||
-		entity.getY() < 0 || entity.getY() > this._height) {
+		entity.getY() < 0 || entity.getY() > this._height ||
+		entity.getZ() < 0 || entity.getZ() >= this._depth) {
 		throw new Error('Adding entity out of bounds');
 	}
 
@@ -63,7 +66,7 @@ Game.Map.prototype.addEntity = function(entity) {
 	}
 }
 
-Game.Map.prototype.getEntitiesWithinRadius = function(centerX, centerY, radius) {
+Game.Map.prototype.getEntitiesWithinRadius = function(centerX, centerY, centerZ, radius) {
 	var results = [];
 
 	// Determine bounds
@@ -77,7 +80,8 @@ Game.Map.prototype.getEntitiesWithinRadius = function(centerX, centerY, radius) 
 		if(this._entities[i].getX() >= leftX &&
 		   this._entities[i].getX() <= rightX &&
 		   this._entities[i].getY() >= topY &&
-		   this._entities[i].getY() <= bottomY) {
+		   this._entities[i].getY() <= bottomY &&
+		   this._entities[i].getZ() == centerZ) {
 			results.push(this._entities[i]);
 		}
 	}
@@ -85,10 +89,11 @@ Game.Map.prototype.getEntitiesWithinRadius = function(centerX, centerY, radius) 
 	return results;
 }
 
-Game.Map.prototype.addEntityAtRandomPosition = function(entity) {
-	var pos = this.getRandomFloorPosition();
+Game.Map.prototype.addEntityAtRandomPosition = function(entity, z) {
+	var pos = this.getRandomFloorPosition(z);
 	entity.setX(pos.x);
 	entity.setY(pos.y);
+	entity.setZ(pos.z);
 	this.addEntity(entity);
 }
 
@@ -101,12 +106,12 @@ Game.Map.prototype.getHeight = function() {
 };
 
 // Gets the tile for a given cord
-Game.Map.prototype.getTile = function(x, y) {
+Game.Map.prototype.getTile = function(x, y, z) {
 	// make sure we are inside the bounds, else return null tile
-	if(x < 0 || x >= this._width || y < 0 || y >= this._height) {
+	if(x < 0 || x >= this._width || y < 0 || y >= this._height || z < 0 || z >= this._depth) {
 		return Game.Tile.nullTile;
 	} else {
-		return this._tiles[x][y] || Game.Tiles.nullTile;
+		return this._tiles[z][x][y] || Game.Tiles.nullTile;
 	}
 };
 
@@ -114,22 +119,22 @@ Game.Map.prototype.getDepth = function() {
     return this._depth;
 }
 
-Game.Map.prototype.dig = function(x, y) {
+Game.Map.prototype.dig = function(x, y, z) {
 	// if the tile is diggable, update it to a floor tile
-	if(this.getTile(x, y).isDiggable()) {
-		this._tiles[x][y] = Game.Tile.floorTile;
+	if(this.getTile(x, y, z).isDiggable()) {
+		this._tiles[z][x][y] = Game.Tile.floorTile;
 	}
 }
 
 // Randomly generate a tile which is a floor
-Game.Map.prototype.getRandomFloorPosition = function() {
+Game.Map.prototype.getRandomFloorPosition = function(z) {
 	var x, y;
 	do {
 		x = Math.floor(Math.random() * this._width);
 		y = Math.floor(Math.random() * this._height);
-	} while(!this.isEmptyFloor(x, y));
+	} while(!this.isEmptyFloor(x, y, z));
 
-	return {x: x, y: y};
+	return {x: x, y: y, z: z};
 }
 
 Game.Map.prototype.getEngine = function() {
@@ -140,10 +145,10 @@ Game.Map.prototype.getEntities = function() {
 	return this._entities;
 }
 
-Game.Map.prototype.getEntityAt = function(x, y) {
+Game.Map.prototype.getEntityAt = function(x, y, z) {
 	// iterate over all entities searching for one with matching pos
 	for(var i=0; i<this._entities.length; i++) {
-		if(this._entities[i].getX() == x && this._entities[i].getY() == y) {
+		if(this._entities[i].getX() == x && this._entities[i].getY() == y && this._entities[i].getZ() == z) {
 			return this._entities[i];
 		}
 	}

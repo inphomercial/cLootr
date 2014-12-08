@@ -25,7 +25,7 @@ var Game = {
 
 		// Bind keyboard input events
 		bindEventToScreen('keydown');
-		bindEventToScreen('keyup');
+		//bindEventToScreen('keyup');
 		bindEventToScreen('keypress');
 	},
 	refresh: function() {
@@ -73,14 +73,14 @@ Game.sendMessage = function(recipient, message, args) {
 	}
 }
 
-Game.sendMessageNearby = function(map, centerX, centerY, message, args) {
+Game.sendMessageNearby = function(map, centerX, centerY, centerZ, message, args) {
 	// if args were passed, we need to formage
 	if(args) {
 		message = vsprintf(message, args);
 	}
 
 	// Get the nearby entities
-	entities = map.getEntitiesWithinRadius(centerX, centerY, 5);
+	entities = map.getEntitiesWithinRadius(centerX, centerY, centerZ, 5);
 
 	// iterate nearby entities sending the message if they can recieve it
 	for(var i=0; i<entities.length; i++) {

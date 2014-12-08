@@ -39,7 +39,7 @@ Game.Builder.prototype.getWidth = function() {
     return this._width;
 }
 
-Game.Builder.prototype.getHeight = funciton() {
+Game.Builder.prototype.getHeight = function() {
     return this._height;
 }
 
@@ -217,7 +217,8 @@ Game.Builder.prototype._generateLevel = function() {
     for(var i=0; i<iterations; i++) {
         generator.create();
     }
-    generator.create(function(x, y v) {
+
+    generator.create(function(x, y, v) {
         if(v === 1) {
             map[x][y] = new Game.Tile.floorTile;
         } else {
@@ -226,4 +227,4 @@ Game.Builder.prototype._generateLevel = function() {
     });
 
     return map;
-});
+};

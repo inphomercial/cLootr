@@ -27,25 +27,32 @@ Game.Screen.startScreen = {
 Game.Screen.playScreen = {
 	_map: null,
 	_player: null,
-	move: function(dX, dY) {
+	move: function(dX, dY, dZ) {
 		// positive dX means right
 		// negative means left
 		// 0 means none
 		var newX = this._player.getX() + dX;
 		var newY = this._player.getY() + dY;
+		var newZ = this._player.getZ() + dZ;
 
 		// try to move to the new cell
-		this._player.tryMove(newX, newY, this._map);
+		this._player.tryMove(newX, newY, newZ, this._map);
 	},
 	enter: function() {
 		console.log("Entered the play screen");
 
 		// Initialize empty map
-		var map = [];
 		var mapWidth = 500;
 		var mapHeight = 500;
+		var depth = 6;
 
-		for(var x=0; x<mapWidth; x++) {
+		var tiles = new Game.Builder(mapWidth, mapHeight, depth).getTiles();
+		this._player = new Game.Entity(Game.PlayerTemplate);
+		this._map = new Game.Map(tiles, this._player);
+
+		this._map.getEngine().start();
+
+		/*for(var x=0; x<mapWidth; x++) {
 			// Create the nested array for the y values
 			map.push([]);
 			// Add all the tiles
@@ -78,11 +85,7 @@ Game.Screen.playScreen = {
 		// Create our map from the tiles
 		this._map = new Game.Map(map, this._player);
 		// Start the maps engine
-		this._map.getEngine().start();
-
-		/*var pos = this._map.getRandomFloorPosition();
-		this._player.setX(pos.x);
-		this._player.setY(pos.y);*/
+		this._map.getEngine().start();*/
 	},
 	exit: function() {
 		console.log("Exited the play screen");
@@ -99,12 +102,13 @@ Game.Screen.playScreen = {
         var topLeftY = Math.max(0, this._player.getY() - (screenHeight / 2));
         // Make sure we still have enough space to fit an entire game screen
         topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
+        
         // Iterate through all visible map cells
         for (var x = topLeftX; x < topLeftX + screenWidth; x++) {
             for (var y = topLeftY; y < topLeftY + screenHeight; y++) {
                 // Fetch the glyph for the tile and render it to the screen
                 // at the offset position.
-                var tile = this._map.getTile(x, y);
+                var tile = this._map.getTile(x, y, this._player.getZ());
                 display.draw(
                     x - topLeftX,
                     y - topLeftY,
@@ -121,7 +125,8 @@ Game.Screen.playScreen = {
             // Only render the entitiy if they would show up on the screen
             if (entity.getX() >= topLeftX && entity.getY() >= topLeftY &&
                 entity.getX() < topLeftX + screenWidth &&
-                entity.getY() < topLeftY + screenHeight) {
+                entity.getY() < topLeftY + screenHeight &&
+                entity.getZ() == this._player.getZ()) {
                 display.draw(
                     entity.getX() - topLeftX, 
                     entity.getY() - topLeftY,    
@@ -165,11 +170,27 @@ Game.Screen.playScreen = {
 					this.move(0, 1);
 				} else if(inputData.keyCode === ROT.VK_UP) {
 					this.move(0, -1);
+				} else {
+					// Not a valid key
+					return ;
 				}
 
 				// Unlock the engine
 				this._map.getEngine().unlock();
 			}
+		} else if (inputType == 'keypress') {
+			var keyChar = String.fromCharCode(inputData.charCode);
+			if(keyChar === ">") {
+				this.move(0, 0, 1);
+			} else if(keyChar === "<") {
+				this.move(0, 0, -1);
+			} else {
+				// Not a valid key
+				return;
+			}
+
+			// Unlock the engine
+			this._map.getEngine().unlock();
 		}
 	}
 }
