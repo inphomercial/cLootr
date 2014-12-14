@@ -28,11 +28,12 @@ Game.Screen.playScreen = {
         var width = 100;
         var height = 48;
         var depth = 6;
+
         // Create our map from the tiles and player
         var tiles = new Game.Builder(width, height, depth).getTiles();
         this._player = new Game.Entity(Game.PlayerTemplate);
         this._map = new Game.Map(tiles, this._player);
-        //this._map = new Game.Map(map, this._player);
+
         // Start the map's engine
         this._map.getEngine().start();
     },
@@ -40,13 +41,19 @@ Game.Screen.playScreen = {
     render: function(display) {
         var screenWidth = Game.getScreenWidth();
         var screenHeight = Game.getScreenHeight();
+
         // Make sure the x-axis doesn't go to the left of the left bound
         var topLeftX = Math.max(0, this._player.getX() - (screenWidth / 2));
+
         // Make sure we still have enough space to fit an entire game screen
         topLeftX = Math.min(topLeftX, this._map.getWidth() - screenWidth);
 
        	// This object will keep track of all visible map cells
        	var visibleCells = {};
+
+       	// Store this._map and player's z to prevent losing it in callbacks
+       	var map = this._map;
+       	var currentDepth = this._player.getZ();
 
        	// Find all visible cells and update the object
        	this._map.getFov(this._player.getZ()).compute(
@@ -55,31 +62,40 @@ Game.Screen.playScreen = {
        		this._player.getSightRadius(),
        		function(x, y, radius, visibility) {
        			visibleCells[x + ',' + y] = true;
-       		}
-       	);
 
+       			// Mark cell as explored
+       			map.setExplored(x, y, currentDepth, true);
+       		});
 
         // Make sure the y-axis doesn't above the top bound
         var topLeftY = Math.max(0, this._player.getY() - (screenHeight / 2));
+
         // Make sure we still have enough space to fit an entire game screen
         topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
         
-        // Iterate through all visible map cells
+        // Render the explored map cells
         for (var x = topLeftX; x < topLeftX + screenWidth; x++) {
             for (var y = topLeftY; y < topLeftY + screenHeight; y++) {
-            	if(visibleCells[x + ',' + y]) {
+            	if(map.isExplored(x, y, currentDepth)) {
             		// Fetch the glyph for the tile and render it to the screen
 	                // at the offset position.
 	                var tile = this._map.getTile(x, y, this._player.getZ());
+
+	                // The foreground color becomes dark gray if the tile has been
+	                // explored but is not visible
+	                var foreground = visibleCells[x + ',' + y] ? tile.getForeground() : 'darkGray';
+
 	                display.draw(
 	                    x - topLeftX,
 	                    y - topLeftY,
 	                    tile.getChar(), 
-	                    tile.getForeground(), 
-	                    tile.getBackground())	
+	                    foreground, 
+	                    tile.getBackground()
+	                );	
 	            }
             }
         }
+
         // Render the entities
         var entities = this._map.getEntities();
         for (var i = 0; i < entities.length; i++) {
@@ -103,6 +119,7 @@ Game.Screen.playScreen = {
         // Get the messages in the player's queue and render them
         var messages = this._player.getMessages();
         var messageY = 0;
+
         for (var i = 0; i < messages.length; i++) {
             // Draw each message, adding the number of lines
             messageY += display.drawText(
@@ -111,6 +128,7 @@ Game.Screen.playScreen = {
                 '%c{white}%b{black}' + messages[i]
             );
         }
+        
         // Render player HP 
         var stats = '%c{white}%b{black}';
         stats += vsprintf('HP: %d/%d ', [this._player.getHp(), this._player.getMaxHp()]);
