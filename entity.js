@@ -47,6 +47,68 @@ Game.Entity = function(args) {
 // Make all entities inherit all form glyph
 Game.Entity.extend(Game.Glyph);
 
+Game.Entity.prototype.tryMove = function(x, y, z, map) {
+    var map = this.getMap();
+    // Must use starting z
+    var tile = map.getTile(x, y, this.getZ());
+    var target = map.getEntityAt(x, y, this.getZ());
+    // If our z level changed, check if we are on stair
+    if (z < this.getZ()) {
+        if (tile != Game.Tile.stairsUpTile) {
+            Game.sendMessage(this, "You can't go up here!");
+        } else {
+            Game.sendMessage(this, "You ascend to level %d!", [z + 1]);
+            this.setPosition(x, y, z);
+        }
+    } else if (z > this.getZ()) {
+        if (tile != Game.Tile.stairsDownTile) {
+            Game.sendMessage(this, "You can't go down here!");
+        } else {
+            this.setPosition(x, y, z);
+            Game.sendMessage(this, "You descend to level %d!", [z + 1]);
+        }
+    // If an entity was present at the tile
+    } else if (target) {
+        // If we are an attacker, try to attack
+        // the target
+        if (this.hasMixin('Attacker') && (this.hasMixin(Game.Mixins.PlayerActor) || 
+        	target.hasMixin(Game.Mixins.PlayerActor))) {
+            this.attack(target);
+            return true;
+        }
+
+        // If nothing we can do 
+        return false;
+    // Check if we can walk on the tile
+    // and if so simply walk onto it
+    } else if (tile.isWalkable()) {        
+        // Update the entity's position
+        this.setPosition(x, y, z);
+
+        // Notify the entity that there are items at this position
+        var items = this.getMap().getItemsAt(x, y, z)
+    	if(items) {
+    		if(items.length === 1) {
+    			Game.sendMessage(this, "You see %s.", [items[0].describeA()]);	
+    		} else {
+    			Game.sendMessage(this, "There are serveral objects here.");
+    		}
+        }
+
+        return true;
+    // Check if the tile is diggable, and
+    // if so try to dig it
+    } else if (tile.isDiggable()) {
+
+    	// only dig if the entity is the player
+    	if(this.hasMixin(Game.Mixins.PlayerActor)) {
+    		map.dig(x, y, z);
+        	return true;	
+    	}
+    }
+    return false;
+};
+
 // Allows passing the mixin or the name / group name as a string
 Game.Entity.prototype.hasMixin = function(mixin) {
 	if(typeof mixin === 'object') {
@@ -61,9 +123,19 @@ Game.Entity.prototype.setName = function(name) {
 }
 
 Game.Entity.prototype.setPosition = function(x, y, z) {
+	var oldX = this._x;
+	var oldY = this._y;
+	var oldZ = this._z;
+
+	// Update position
     this._x = x;
     this._y = y;
     this._z = z;
+
+    // If the entity is on a map, notify the map that the entity has moved
+    if(this._map) {
+    	this._map.updateEntityPosition(this, oldX, oldY, oldZ);
+    }
 }
 
 Game.Entity.prototype.setX = function(x) {
